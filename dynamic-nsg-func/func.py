@@ -1,30 +1,16 @@
 import io
 import json
-import logging
-import oci
 
 from fdk import response
+import oci
 
+def handler(ctx, data: io.BytesIO=None):
+    signer = oci.auth.signers.get_resource_principals_signer()
+    resp = do(signer)
+    return response.Response(ctx,
+        response_data=json.dumps(resp),
+        headers={"Content-Type": "application/json"} )
 
-def handler(ctx, data: io.BytesIO = None):
-    name = "World"
-    try:
-        body = json.loads(data.getvalue())
-        name = body.get("name")
-    except (Exception, ValueError) as ex:
-        logging.getLogger().info('error parsing json payload: ' + str(ex))
-
-    logging.getLogger().info("Inside Python Hello World function")
-    return response.Response(
-        ctx, response_data=json.dumps(
-            {"message": "One day I will grow up and be a dynamic nsg {0}".format(name)}),
-        headers={"Content-Type": "application/json"}
-    )
-
-
-##########################################################################
-# Create Resource Principal Signer for Authentication
-##########################################################################
 def do(signer):
     # List VCNs --------------------------------------------------------
     client = oci.core.VirtualNetworkClient({}, signer=signer)
